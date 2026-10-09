@@ -1,0 +1,5 @@
+glfw
+PyOpenGL
+# Para la actualizacion de audio/animacion (aun sin usar):
+numpy
+pygame

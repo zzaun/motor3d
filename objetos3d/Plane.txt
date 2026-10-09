@@ -1,0 +1,33 @@
+# motor3d objeto v1
+# Edita el encabezado [nodo] a mano: padre, es_hueso, apunta_a, pivote.
+# Al volver a convertir el .obj esos campos se conservan.
+[nodo]
+tipo = nodeObjeto3D
+name = Plane
+padre = 
+location = -2 0 -3
+rotation = 0 0 0
+escala = 1 1 1
+visible = 1
+ejes = 0
+es_hueso = 0
+apunta_a = 
+pivote = 0 0 0
+[vertices]
+-5 0 5
+5 0 5
+5 0 -5
+-5 0 -5
+[normales]
+0 1 0
+0 1 0
+0 1 0
+0 1 0
+[caras]
+0 1 2 0.8 0.8 0.8
+0 2 3 0.8 0.8 0.8
+[uvs]
+0 0
+1 0
+1 1
+0 1

@@ -81,6 +81,11 @@ def main():
     limitador = LimitadorFPS()
     estado = {"fps": 0.0}
 
+    # Los nodeAudio con AL INICIAR empiezan a sonar
+    for nodo in escena.nodos:
+        if nodo.TIPO == "nodeAudio" and nodo.al_iniciar:
+            nodo.reproducir()
+
     previo = glfw.get_time()
     acumulado, cuadros = 0.0, 0
 
@@ -134,6 +139,9 @@ def main():
         # LIMITE FPS (configuracion global): espera lo que falte del cuadro
         limitador.esperar(escena.global_.limite_fps)
 
+    for nodo in escena.nodos:
+        if nodo.TIPO == "nodeAudio":
+            nodo.detener()
     for objeto in escena.objetos():
         objeto.liberar()
     panel.cerrar()

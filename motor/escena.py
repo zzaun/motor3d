@@ -14,7 +14,8 @@ El dibujo se hace en dos pasadas sobre el arbol de nodos:
 """
 from OpenGL.GL import *  # noqa: F401,F403
 
-from .nodos import (NodeGlobal, NodeCamera, NodeObjeto3D, NodeLight,
+from . import audio
+from .nodos import (NodeGlobal, NodeCamera, NodeObjeto3D, NodeLight, NodeAudio,
                     NodeLightPoint, NodeLightSol, NodeLightSpot, MAX_LUCES)
 
 _CLASES_LUZ = {"nodeLightPoint": NodeLightPoint,
@@ -125,6 +126,14 @@ class Escena:
         luz.guardar_reposo()
         return self.agregar(luz)
 
+    def agregar_audio(self):
+        """Crea un nodeAudio con el primer sonido de recursos/sonidos/."""
+        nodo = NodeAudio("Audio")
+        sonidos = audio.listar_sonidos()
+        nodo.archivo = sonidos[0] if sonidos else ""
+        nodo.guardar_reposo()
+        return self.agregar(nodo)
+
     def eliminar(self, nodo):
         """Elimina un nodo (sus hijos pasan al padre del nodo)."""
         if nodo is None or isinstance(nodo, NodeCamera) or nodo not in self.nodos:
@@ -135,6 +144,8 @@ class Escena:
         self.nodos.remove(nodo)
         if isinstance(nodo, NodeObjeto3D):
             nodo.liberar()
+        if isinstance(nodo, NodeAudio):
+            nodo.detener()
         if self.seleccion is nodo:
             self.seleccion = None
         return True

@@ -41,6 +41,12 @@ COLOR_GRIS = (0.66, 0.68, 0.74)
 COLOR_AVISO = (1.0, 0.65, 0.25)
 
 
+# Colores basicos de la paleta: blanco, negro, rojo, verde, azul, amarillo,
+# naranja y violeta
+PALETA = [(1.0, 1.0, 1.0), (0.10, 0.10, 0.10), (0.90, 0.15, 0.15), (0.20, 0.70, 0.25),
+          (0.20, 0.40, 0.95), (0.95, 0.85, 0.20), (0.95, 0.50, 0.15), (0.60, 0.30, 0.80)]
+
+
 class Tema:
     """Colores de una region: fondo, barra de titulo y botones."""
 
@@ -463,8 +469,10 @@ class Interfaz:
                                     minimo, maximo, decimales)
         return nuevos
 
-    def color3(self, prefijo, valores):
-        """Muestra de color + tres filas R, G, B entre 0 y 1."""
+    def color3(self, prefijo, valores, paleta=False):
+        """Muestra de color + tres filas R, G, B entre 0 y 1.
+
+        paleta=True agrega una fila de colores basicos para elegir con un clic."""
         y = self._y
         if self._visible(y, ALTO_FILA):
             glColor3f(*COLOR_TEXTO)
@@ -473,4 +481,12 @@ class Interfaz:
             self.rect(MARGEN + ANCHO_ETIQUETA, y, 28 + 84 + 28 + 4, ALTO_FILA,
                       tuple(max(0.0, min(1.0, c)) for c in valores))
         self._y += ALTO_FILA + SEPARACION
+        if paleta:
+            hueco = 4
+            ancho = (self.ancho_util - hueco * (len(PALETA) - 1)) / len(PALETA)
+            for i, c in enumerate(PALETA):
+                if self._boton(MARGEN + i * (ancho + hueco), self._y, ancho,
+                               ALTO_FILA, "", False, False, c):
+                    valores = list(c)
+            self._y += ALTO_FILA + SEPARACION
         return self.vec3(prefijo, valores, 0.05, 0.0, 1.0, 2, "RGB")

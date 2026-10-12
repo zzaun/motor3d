@@ -12,7 +12,8 @@ de la tabla PARAMS de cada clase de nodo (motor/nodos.py), asi que un
 parametro nuevo aparece solo en la interfaz y en los archivos.
 """
 from motor.archivos import guardar_escena
-from motor.nodos import NodeCamera, Node3D
+from motor import audio
+from motor.nodos import NodeCamera, NodeAudio, Node3D
 
 from .interfaz import (Interfaz, TEMA_CAFE, TEMA_VERDE, TEMA_AZUL, COLOR_TEXTO,
                        COLOR_GRIS, COLOR_AVISO, ALTO_FILA, SEPARACION)
@@ -95,7 +96,14 @@ class PanelNodos(Interfaz):
         else:
             borrable = (escena.seleccion is not None
                         and not isinstance(escena.seleccion, NodeCamera))
-            if self.boton("ELIMINAR NODO") and borrable:
+            i = self.botones_fila(["+ AUDIO", "ELIMINAR NODO"])
+            if i == 0:
+                nuevo = escena.agregar_audio()
+                escena.seleccionar(nuevo)
+                if not nuevo.archivo:
+                    self._aviso_lista = ("NO HAY SONIDOS EN RECURSOS/SONIDOS",
+                                         self.ahora + 3.0)
+            elif i == 1 and borrable:
                 escena.eliminar(escena.seleccion)
 
     # ------------------------------------------------------------------
@@ -128,6 +136,10 @@ class PanelNodos(Interfaz):
             self.texto("PADRE: " + nodo.padre.name)
         self.espacio(4)
 
+        # En el audio, REPRODUCIR / DETENER van arriba: es lo que mas se usa
+        if isinstance(nodo, NodeAudio):
+            self._controles_audio(nodo)
+
         self._parametros(nodo)
 
         if isinstance(nodo, NodeCamera):
@@ -140,10 +152,27 @@ class PanelNodos(Interfaz):
                 nodo.vista_rapida(nombres[i])
             if j >= 0:
                 nodo.vista_rapida(nombres[2 + j])
+        elif isinstance(nodo, NodeAudio):
+            pass
         elif isinstance(nodo, Node3D):
             self.espacio()
             if self.boton("REINICIAR POSE"):
                 nodo.reiniciar()
+
+    def _controles_audio(self, nodo):
+        """Elegir el archivo de sonido y reproducir / detener."""
+        j = self.botones_fila(["REPRODUCIR", "DETENER"], [nodo.sonando(), False])
+        if j == 0:
+            nodo.reproducir()
+        elif j == 1:
+            nodo.detener()
+        i = self.botones_fila(["< ARCHIVO", "ARCHIVO >"])
+        if i >= 0:
+            nodo.cambiar_archivo(-1 if i == 0 else 1)
+        if not audio.listar_sonidos():
+            self.parrafo("PON ARCHIVOS .WAV, .OGG O .MP3 EN RECURSOS/SONIDOS", COLOR_AVISO)
+        nodo.ajustar_volumen()     # el volumen se oye al instante
+        self.espacio()
 
     # ------------------------------------------------------------------
     # Controles generados a partir de la tabla de parametros
@@ -173,7 +202,7 @@ class PanelNodos(Interfaz):
             nuevo = self.vec3(p.etiqueta, valor, p.paso, p.minimo, p.maximo,
                               p.decimales, p.ejes)
         elif p.tipo == "color":
-            nuevo = self.color3(p.etiqueta, valor)
+            nuevo = self.color3(p.etiqueta, valor, p.paleta)
         elif p.tipo == "opcion":
             self.texto(p.etiqueta)
             activos = [valor == o for o in p.opciones]

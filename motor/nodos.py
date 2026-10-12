@@ -10,7 +10,8 @@ Cada nodo hereda los parametros del anterior:
         |   |-- NodeLightPoint     Radius
         |   |   `-- NodeLightSpot  Radius + Angle
         |   `-- NodeLightSol       (la direccion sale de la Rotation)
-        `-- NodeCamera         FOV, modo orbital / libre
+        |-- NodeCamera         FOV, modo orbital / libre
+        `-- NodeAudio          ARCHIVO, VOLUMEN, REPETIR, AL INICIAR
 
 Cada clase declara sus parametros en una tabla (PARAMS). Esa misma tabla se
 usa para: crear los atributos del nodo, dibujar la interfaz de
@@ -21,6 +22,8 @@ import copy
 import math
 
 from OpenGL.GL import *  # noqa: F401,F403
+
+from . import audio
 
 
 # ======================================================================
@@ -38,7 +41,8 @@ class P:
 
     def __init__(self, clave, tipo, etiqueta, defecto=None, paso=0.1,
                  minimo=None, maximo=None, decimales=2, opciones=None,
-                 ayuda="", cuando=None, ejes="XYZ", editable=True, ui=True):
+                 ayuda="", cuando=None, ejes="XYZ", editable=True, ui=True,
+                 paleta=False):
         self.clave = clave
         self.tipo = tipo
         self.etiqueta = etiqueta
@@ -53,6 +57,7 @@ class P:
         self.ejes = ejes
         self.editable = editable
         self.ui = ui
+        self.paleta = paleta         # color: mostrar una fila de colores basicos
 
     # ---- texto <-> valor (para los .txt) ----
     def a_texto(self, valor):
@@ -211,6 +216,10 @@ class Node3D(Node):
 class NodeObjeto3D(Node3D):
     TIPO = "nodeObjeto3D"
     PARAMS = [
+        # Color basico: pinta todo el objeto de un solo color (modo MATERIAL)
+        P("usar_color", "bool", "COLOR BASICO", False),
+        P("color", "color", "COLOR", [0.8, 0.8, 0.8], paleta=True,
+          cuando=lambda n: n.usar_color),
         P("escala", "vec3", "ESCALA", [1.0, 1.0, 1.0], paso=0.05, minimo=0.01),
         P("es_hueso", "bool", "HUESO", False),
         P("apunta_a", "texto", "APUNTA A", "", editable=False),
@@ -295,7 +304,10 @@ class NodeObjeto3D(Node3D):
         elif modo == "SOLIDO":
             glColor3f(0.75, 0.75, 0.78)
             glCallList(self._lista_geo)
-        else:  # MATERIAL
+        elif self.usar_color:   # MATERIAL con color basico
+            glColor3f(*self.color)
+            glCallList(self._lista_geo)
+        else:                   # MATERIAL con el color de cada cara
             glCallList(self._lista_color)
         if resaltado:
             self._dibujar_contorno(luz_activa)
@@ -652,11 +664,56 @@ class NodeCamera(Node3D):
 
 
 # ======================================================================
+# nodeAudio: un sonido en la escena (muy simple)
+# ======================================================================
+class NodeAudio(Node3D):
+    """Reproduce un archivo de recursos/sonidos/. Por ahora no es espacial:
+    su Location queda guardada para cuando agreguemos sonido 3D."""
+    TIPO = "nodeAudio"
+    PARAMS = [
+        # No tiene forma ni giro: se ocultan los parametros que no aplican
+        P("visible", "bool", "VISIBLE", True, ui=False),
+        P("ejes", "bool", "EJES", False, ui=False),
+        P("rotation", "vec3", "ROTATION", [0.0, 0.0, 0.0], ui=False),
+        P("archivo", "texto", "ARCHIVO", "", editable=False),
+        P("volumen", "float", "VOLUMEN", 1.0, paso=0.05, minimo=0.0, maximo=1.0),
+        P("repetir", "bool", "REPETIR", False),
+        P("al_iniciar", "bool", "AL INICIAR", False),
+    ]
+
+    def __init__(self, nombre="audio"):
+        super().__init__(nombre)
+        self._canal = None
+
+    def reproducir(self):
+        self.detener()
+        self._canal = audio.reproducir(self.archivo, self.volumen, self.repetir)
+
+    def detener(self):
+        audio.detener(self._canal)
+        self._canal = None
+
+    def sonando(self):
+        return audio.sonando(self._canal)
+
+    def ajustar_volumen(self):
+        audio.ajustar_volumen(self._canal, self.volumen)
+
+    def cambiar_archivo(self, paso):
+        """Pasa al sonido anterior (-1) o siguiente (+1) de la carpeta."""
+        archivos = audio.listar_sonidos()
+        if not archivos:
+            return
+        i = archivos.index(self.archivo) if self.archivo in archivos else -1
+        self.archivo = archivos[(i + paso) % len(archivos)]
+
+
+# ======================================================================
 # Registro de tipos (para leer los .txt)
 # ======================================================================
 TIPOS = {c.TIPO: c for c in (
     Node, NodeGlobal, Node3D, NodeObjeto3D, NodeLight,
-    NodeLightPoint, NodeLightSol, NodeLightSpot, NodeCamera)}
+    NodeLightPoint, NodeLightSol, NodeLightSpot, NodeCamera, NodeAudio)}
 TIPOS["nodeGobal"] = NodeGlobal      # alias del nombre tal como lo escribiste
 
 TIPOS_LUZ = ["nodeLightPoint", "nodeLightSol", "nodeLightSpot"]

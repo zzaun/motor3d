@@ -1,29 +1,22 @@
-"""Escena: contiene todos los nodos y sabe dibujarlos.
+#   Escena: contiene todos los nodos y sabe dibujarlos.
+#  - global_  : el nodeGlobal (ambiente general; uno solo, siempre id 0)
+#  - nodos    : todos los demas nodos (objetos, luces y camara), en una lista plana. La jerarquia sale de los campos padre / hijos.
+#  - camara   : el nodeCamera (tambien esta dentro de `nodos`)
+#  - seleccion: el nodo seleccionado (o None)
+# El dibujo se hace en dos pasadas sobre el arbol de nodos:
+#  1) luces: cada luz se configura con la matriz de su nodo ya aplicada, asi OpenGL transforma su posicion y direccion (y funciona aunque la luz sea
+#    hija de otro nodo).
+#  2) objetos: se dibuja la geometria, los ejes, los huesos y los iconos.
 
-  - global_  : el nodeGlobal (ambiente general; uno solo, siempre id 0)
-  - nodos    : todos los demas nodos (objetos, luces y camara), en una lista
-               plana. La jerarquia sale de los campos padre / hijos.
-  - camara   : el nodeCamera (tambien esta dentro de `nodos`)
-  - seleccion: el nodo seleccionado (o None)
 
-El dibujo se hace en dos pasadas sobre el arbol de nodos:
-  1) luces: cada luz se configura con la matriz de su nodo ya aplicada, asi
-     OpenGL transforma su posicion y direccion (y funciona aunque la luz sea
-     hija de otro nodo).
-  2) objetos: se dibuja la geometria, los ejes, los huesos y los iconos.
-"""
 from OpenGL.GL import *  # noqa: F401,F403
 
 from . import audio
 from .nodos import (NodeGlobal, NodeCamera, NodeObjeto3D, NodeLight, NodeAudio,
                     NodeLightPoint, NodeLightSol, NodeLightSpot, MAX_LUCES)
 
-_CLASES_LUZ = {"nodeLightPoint": NodeLightPoint,
-               "nodeLightSol": NodeLightSol,
-               "nodeLightSpot": NodeLightSpot}
-_NOMBRES_LUZ = {"nodeLightPoint": "Punto", "nodeLightSol": "Sol",
-                "nodeLightSpot": "Spot"}
-
+_CLASES_LUZ = {"nodeLightPoint": NodeLightPoint, "nodeLightSol": NodeLightSol, "nodeLightSpot": NodeLightSpot}
+_NOMBRES_LUZ = {"nodeLightPoint": "Punto", "nodeLightSol": "Sol", "nodeLightSpot": "Spot"}
 
 class Escena:
     def __init__(self):
@@ -42,7 +35,6 @@ class Escena:
         # Reservado para la futura animacion (por fotograma)
         self.frame_actual = 0
         self.reproduciendo = False
-
     # ------------------------------------------------------------------
     # Gestion de nodos
     # ------------------------------------------------------------------

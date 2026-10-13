@@ -1,13 +1,9 @@
-"""preparar_objetos3d: lee los .txt de la carpeta objetos3d/ y crea los
-nodeObjeto3D de la escena. Cada .txt es un objeto.
+#   preparar_objetos3d: lee los .txt de la carpeta objetos3d/ y crea los nodeObjeto3D de la escena. Cada .txt es un objeto.
+#   Despues enlaza la jerarquia segun el encabezado de cada objeto:
+#   - Si un objeto tiene 'padre', ese es su padre.
+#   - Si un hueso tiene 'apunta_a' y el objeto apuntado no tiene padre explicito, el hueso pasa a ser su padre.
+#   La posicion de un hijo pasa a ser relativa a su padre (la pose de reposo sigue siendo la del modelo original).
 
-Despues enlaza la jerarquia segun el encabezado de cada objeto:
-  - Si un objeto tiene 'padre', ese es su padre.
-  - Si un hueso tiene 'apunta_a' y el objeto apuntado no tiene padre
-    explicito, el hueso pasa a ser su padre.
-La posicion de un hijo pasa a ser relativa a su padre (la pose de reposo
-sigue siendo la del modelo original).
-"""
 import os
 
 from .archivos import leer_objeto
